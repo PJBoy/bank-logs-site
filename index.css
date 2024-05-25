@@ -1,0 +1,182 @@
+*, *:before, *:after
+{
+    box-sizing: border-box;
+}
+
+html, body
+{
+    background: #FFF;
+    height: 100%;
+}
+body
+{
+    /* Flexing across header/body/main_search_separator/search_results_panel */
+    display: flex;
+    flex-direction: column;
+    
+    padding: 0.5em;
+}
+body, pre
+{
+    margin: 0;
+}
+pre
+{
+    padding: 0 1em;
+}
+iframe
+{
+    display: block;
+}
+
+#header
+{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #FFF;
+    height: 2em;
+}
+#body
+{
+    /* Flexing across left/main_separator/right */
+    display: flex;
+    
+    overflow: clip;
+    
+    /* Fill the rest of the height of <body> */
+    /* Simplifies dragging the horizontal separator */
+    flex: 1;
+    min-height: 0; /* For firefox */
+}
+#search_results_panel
+{
+    /* Flexing across search_left/search_separator/search_right */
+    display: flex;
+    
+    overflow: clip;
+    
+    /* This height is used when search is performed */
+    height: 50vh;
+}
+#left, #search_left, #right
+{
+    overflow-y: scroll
+}
+#left, #search_left
+{
+    width: 40vw;
+}
+#right, #search_right
+{
+    /* Fill the rest of the width of #body/#search_results_panel */
+    /* Simplifies dragging the vertical separator */
+    flex: 1;
+    min-width: 0; /* For firefox */
+}
+#search_sample
+{
+    height: 100%;
+    border: none;
+}
+
+.vertical_separator
+{
+    width: 1em;
+    cursor: col-resize;
+    background: linear-gradient(to right, #FFF, #888, #FFF);
+}
+.horizontal_separator
+{
+    height: 1em;
+    cursor: row-resize;
+    background: linear-gradient(#FFF, #888, #FFF);
+}
+.comment
+{
+    color: #F00;
+}
+.opcode
+{
+    color: #F80;
+}
+.directive
+{
+    color: #880;
+}
+.address_rom, #body a
+{
+    color: #080;
+}
+.address_ram
+{
+    color: #088;
+    position: relative;
+}
+.tooltip
+{
+    position: absolute;
+    visibility: hidden;
+    background: #EEE;
+    bottom: 1em;
+    padding: 0.5em 1em;
+    border-radius: 0.5em;
+    white-space: normal;
+    max-width: 400px;
+}
+.address_ram:hover .tooltip
+{
+    visibility: visible;
+}
+.addressed:
+{
+}
+.arrow
+{
+    position: absolute;
+    visibility: hidden;
+}
+.addressed:hover .arrow
+{
+    visibility: visible;
+}
+.clickable
+{
+    cursor: pointer;
+}
+.highlighted
+{
+    background: #FF0;
+}
+.invertedColours
+{
+    filter: hue-rotate(180deg) invert(100%);
+}
+.gfx1 { background: #000; }
+.gfx2 { background: #F00; }
+.gfx3 { background: #0FF; }
+.gfx4 { background: #FF0; }
+.gfx5 { background: #0F0; }
+.gfx6 { background: #00F; }
+.gfx7 { background: #F0F; }
+.gfx8 { background: #800; }
+.gfx9 { background: #480; }
+.gfxA { background: #088; }
+.gfxB { background: #408; }
+.gfxC { background: #F88; }
+.gfxD { background: #CF8; }
+.gfxE { background: #8FF; }
+.gfxF { background: #C8F; }
+
+@media (prefers-color-scheme: dark)
+{
+    html, iframe
+    {
+        filter: hue-rotate(180deg) invert(100%);
+    }
+    
+    .invertedColours
+    {
+        filter: none;
+    }
+}
