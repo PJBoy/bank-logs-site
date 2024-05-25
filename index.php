@@ -250,7 +250,7 @@
             <meta property=og:description content="<?=$routineHeader?>">
         <?php endif; ?>
         <meta name=theme-color content=#FF0000>
-        <title>Bank $<?=$bank?></title>
+        <title>$<?=$bank?></title>
         <script async src=index.js></script>
         <link rel=stylesheet href=index.css>
     <?php if (isset($_GET['wrap'])): ?>
