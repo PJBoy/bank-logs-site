@@ -68,8 +68,39 @@
         }
     }
 
+
+    $bank = $_GET["bank"];
+    validateGetBank($bank);
+    list($bank, $regex_bank) = translateBank($bank);
+    $bankFilename = "../ASM/ROM data/Super Metroid/Bank \$$bank.asm";
+    if (!isset($_GET['debug']))
+        loadCache($bank, $bankFilename);
+
+    // Build regular expressions //
+    // Addresses without dollar prefix
+    $regex_shortROMAddress_raw = '([89A-F][0-9A-F]{3})\b';                         // 8000
+    $regex_longROMAddressInBank_raw = "($regex_bank)$regex_shortROMAddress_raw";   // 808000 (current bank)
+    $regex_longROMAddressInBank2_raw = "($regex_bank):$regex_shortROMAddress_raw"; // 80:8000 (current bank)
+    $regex_longROMAddress_raw = "([89A-D][0-9A-F])$regex_shortROMAddress_raw";     // 808000 (any bank)
+    $regex_longROMAddress2_raw = "([89A-D][0-9A-F]):$regex_shortROMAddress_raw";   // 80:8000 (any bank)
+
+    // Addresses with dollar prefix
+    $regex_shortROMAddress = "(?:^|(?<=[^#]))\\\$$regex_shortROMAddress_raw"; // $8000
+    $regex_longROMAddressInBank = "\\\$$regex_longROMAddressInBank_raw";      // $808000 (current bank)
+    $regex_longROMAddressInBank2 = "\\\$$regex_longROMAddressInBank2_raw";    // $80:8000 (current bank)
+    $regex_longROMAddress = "\\\$$regex_longROMAddress_raw";                  // $808000 (any bank)
+    $regex_longROMAddress2 = "\\\$$regex_longROMAddress2_raw";                // $80:8000 (any bank)
+
+    // Address regex's suitable for syntax highlighting
+    $regex_address_rom_raw = '((?:[8-9A-F][0-9A-F]:?)?[89A-F][0-9A-F]{3})\b';
+    $regex_address_ram_raw = '((?:(?:7[0EF]:?[0-9A-F]|[0-7])[0-9A-F])?[0-9A-F]{2})\b(?!:)';
+    $regex_address_rom = "\\\$$regex_address_rom_raw";
+    $regex_address_ram = "\\\$$regex_address_ram_raw";
+
     function extractSection(&$bankBody)
     {
+        global $regex_longROMAddress2;
+        
         // FIXME: won't work on multibank logs
         $i_address = strpos($bankBody, "\n\$$bank:{$_GET['just']}");
         if ($i_address === false)
@@ -116,35 +147,6 @@
         
         return $routineHeader;
     }
-
-
-    $bank = $_GET["bank"];
-    validateGetBank($bank);
-    list($bank, $regex_bank) = translateBank($bank);
-    $bankFilename = "../ASM/ROM data/Super Metroid/Bank \$$bank.asm";
-    if (!isset($_GET['debug']))
-        loadCache($bank, $bankFilename);
-
-    // Build regular expressions //
-    // Addresses without dollar prefix
-    $regex_shortROMAddress_raw = '([89A-F][0-9A-F]{3})\b';                         // 8000
-    $regex_longROMAddressInBank_raw = "($regex_bank)$regex_shortROMAddress_raw";   // 808000 (current bank)
-    $regex_longROMAddressInBank2_raw = "($regex_bank):$regex_shortROMAddress_raw"; // 80:8000 (current bank)
-    $regex_longROMAddress_raw = "([89A-D][0-9A-F])$regex_shortROMAddress_raw";     // 808000 (any bank)
-    $regex_longROMAddress2_raw = "([89A-D][0-9A-F]):$regex_shortROMAddress_raw";   // 80:8000 (any bank)
-
-    // Addresses with dollar prefix
-    $regex_shortROMAddress = "(?:^|(?<=[^#]))\\\$$regex_shortROMAddress_raw"; // $8000
-    $regex_longROMAddressInBank = "\\\$$regex_longROMAddressInBank_raw";      // $808000 (current bank)
-    $regex_longROMAddressInBank2 = "\\\$$regex_longROMAddressInBank2_raw";    // $80:8000 (current bank)
-    $regex_longROMAddress = "\\\$$regex_longROMAddress_raw";                  // $808000 (any bank)
-    $regex_longROMAddress2 = "\\\$$regex_longROMAddress2_raw";                // $80:8000 (any bank)
-
-    // Address regex's suitable for syntax highlighting
-    $regex_address_rom_raw = '((?:[8-9A-F][0-9A-F]:?)?[89A-F][0-9A-F]{3})\b';
-    $regex_address_ram_raw = '((?:(?:7[0EF]:?[0-9A-F]|[0-7])[0-9A-F])?[0-9A-F]{2})\b(?!:)';
-    $regex_address_rom = "\\\$$regex_address_rom_raw";
-    $regex_address_ram = "\\\$$regex_address_ram_raw";
 
     function generateHeaderPanel($bankBody)
     {
