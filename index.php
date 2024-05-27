@@ -7,7 +7,7 @@
             exit;
         }
     }
-    
+
     function translateBank($bank)
     {
         $regex_bank = $bank;
@@ -43,18 +43,18 @@
             $bank = 'CF..$DE';
             $regex_bank = '(?:CF|D[0-9A-E])';
         }
-        
+
         return array($bank, $regex_bank);
     }
-    
+
     function loadCache($bank, $bankFilename)
     {
         $modificationTime = filemtime($bankFilename);
         $cacheFilename = "./cache/$bank!$modificationTime";
-        
+
         if (isset($_GET['nocache']))
             unlink($cacheFilename);
-        
+
         if (!isset($_GET['just']))
         {
             if (file_exists($cacheFilename))
@@ -62,7 +62,7 @@
                 readfile($cacheFilename);
                 exit;
             }
-            
+
             foreach (glob("./cache/$bank!*") as $path)
                 unlink($path);
         }
@@ -97,10 +97,10 @@
     $regex_address_rom = "\\\$$regex_address_rom_raw";
     $regex_address_ram = "\\\$$regex_address_ram_raw";
 
-    function extractSection(&$bankBody)
+    function extractSection(&$bankBody, $bank)
     {
         global $regex_longROMAddress2;
-        
+
         // FIXME: won't work on multibank logs
         $i_address = strpos($bankBody, "\n\$$bank:{$_GET['just']}");
         if ($i_address === false)
@@ -110,23 +110,23 @@
             for (; $i < count($results[0]); ++$i)
                 if (intval($results[2][$i][0], 0x10) >= intval($_GET['just'], 0x10))
                     break;
-                
+
             if ($i == 0)
                 exit;
-            
+
             $i_address = $results[0][$i - 1][1];
         }
 
         $i_routineBegin_header = strrpos(substr($bankBody, 0, $i_address), ';;; ');
         if ($i_routineBegin_header === false)
             $i_routineBegin_header = 0;
-        
+
         $i_routineBegin_noHeader = strrpos(substr($bankBody, 0, $i_address), "\n\n\n");
         if ($i_routineBegin_noHeader === false)
             $i_routineBegin_noHeader = 0;
         else
             $i_routineBegin_noHeader += 3;
-        
+
         $i_routineBegin = max($i_routineBegin_header, $i_routineBegin_noHeader);
 
         $i_closingBrace = strpos($bankBody, "}\n\n\n", $i_address);
@@ -134,27 +134,27 @@
             $i_closingBrace = strlen($bankBody);
         else
             $i_closingBrace += 1;
-        
+
         $i_newRoutine = strpos($bankBody, "\n\n\n", $i_address);
         if ($i_newRoutine === false)
             $i_newRoutine = $i_closingBrace;
-        
+
         $i_routineEnd = min($i_closingBrace, $i_newRoutine);
-        
+
         $bankBody = substr($bankBody, $i_routineBegin, $i_routineEnd - $i_routineBegin);
         if ($i_routineBegin_header !== false)
             $routineHeader = substr($bankBody, 4, strpos($bankBody, " ;;;") - 4);
-        
+
         return $routineHeader;
     }
 
     function generateHeaderPanel($bankBody)
     {
         global $regex_shortROMAddress, $regex_longROMAddressInBank2;
-        
+
         // Scrape all of the function declaration comments into $bankHeader and make them anchors
         preg_match_all("/;;; (?:$regex_shortROMAddress|$regex_longROMAddressInBank2).*?;;;/i", $bankBody, $bankHeader);
-        
+
         // Indent header lines according to begin..end nesting (bank $A7 probably has the deepest nesting)
         $nestEnds = [];
         foreach ($bankHeader[0] as &$line)
@@ -163,40 +163,40 @@
             preg_match("/$regex_shortROMAddress/i", $line, $match);
             if (!$match)
                 continue;
-            
+
             $begin = intval($match[1], 0x10);
-            
+
             while ($nestEnds && $nestEnds[0] < $begin)
                 array_shift($nestEnds);
-            
+
             $line = str_repeat(' ', count($nestEnds) * 4) . $line;
-            
+
             preg_match("/$regex_shortROMAddress\\.\\.([0-9A-F]+)/i", $line, $match);
             if (!$match)
                 continue;
-            
+
             $begin = intval($match[1], 0x10);
             $end = intval($match[2], 0x10);
             if ($end < 0x100)
                 $end += $begin & ~0xFF;
-            
+
             $nestEnds[] = $end;
             sort($nestEnds, SORT_NUMERIC);
         }
-        
+
         $bankHeader = implode("\n", $bankHeader[0]);
-        
+
         // Turn into anchors
         $bankHeader = preg_replace("/(?<=;;; )$regex_shortROMAddress/i", '<a href="#f$1" class=address_rom>$$1</a>', $bankHeader);
         $bankHeader = preg_replace("/(?<=;;; )$regex_longROMAddressInBank2/i", '<a href="#f$1:$2">$$1:$2</a>', $bankHeader);
-        
+
         return $bankHeader;
     }
-    
+
     function generateBodyPanel(&$bankBody)
     {
         global $regex_shortROMAddress, $regex_longROMAddress, $regex_longROMAddressInBank2, $regex_longROMAddress2, $regex_address_ram, $regex_address_rom;
-        
+
         // Create IDs for anchors to link to for function declaration headers
         $bankBody = preg_replace("/;;; $regex_shortROMAddress/i", ';;; <span id="f$1">$$1</span>', $bankBody);
         $bankBody = preg_replace("/;;; $regex_longROMAddressInBank2/i", ';;; <span id="f$1:$2">$$1:$2</span>', $bankBody);
@@ -231,11 +231,11 @@
 
     $routineHeader = "";
     if (isset($_GET['just']))
-        $routineHeader = extractSection($bankBody);
+        $routineHeader = extractSection($bankBody, $bank);
 
     $bankHeader = generateHeaderPanel($bankBody);
     generateBodyPanel($bankBody);
-    
+
     if (!isset($_GET['just']) && !isset($_GET['debug']))
         ob_start();
 ?>
